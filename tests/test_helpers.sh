@@ -28,6 +28,14 @@ log_test_fail() {
     echo -e "${RED}Test FAILED: $1${NC}"
 }
 
+# The container name is derived from the manifest rather than written into each
+# test, so a new game edits manifest.env and nothing else.
+TEST_PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if [[ -z "${GAME_ID:-}" && -r "${TEST_PROJECT_ROOT}/manifest.env" ]]; then
+    GAME_ID="$(sed -n 's/^GAME_ID=//p' "${TEST_PROJECT_ROOT}/manifest.env" | tr -d '"' | head -1)"
+fi
+CONTAINER="${CONTAINER:-${GAME_ID:-example}-server}"
+
 # Every unit test collects failures rather than stopping at the first, so one
 # run shows the whole distance.
 CHECKS_FAILED=0

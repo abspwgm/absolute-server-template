@@ -15,7 +15,11 @@ logic — and the update logic is the part that most needs to be right.
 | [`manifest.env`](manifest.env) | Everything that differs between one game and another. Validated at start; a placeholder app id or a wrong stop signal stops the container rather than being guessed. |
 | [`scripts/common`](scripts/common) | The shared library: logging, paths, process matching, the credential guard, pinned downloads, SteamCMD build ids. Game-agnostic by construction. |
 | [`scripts/manifest`](scripts/manifest) | Loads and validates the manifest. Fails closed. |
+| [`Dockerfile`](Dockerfile) | The image. A new game normally changes four things: the `GAME_ID` default, the packages its engine needs, `EXPOSE`, and the default port. |
+| [`config/supervisord.conf`](config/supervisord.conf) | Supervises **the game process itself**, not a wrapper, and sends its output to the container's stdout. |
 | [`tests/unit/`](tests/unit) | The fast tier. No Docker, no network, under a second, and it fails when any of the above stops being true. |
+| [`tests/e2e/`](tests/e2e) | The merge tier, against the real image. Readiness is a bound port, not a log line. |
+| [`docs/INSTALL.md`](docs/INSTALL.md) | The install guide skeleton, written to the documentation standard. |
 | [`.absolute/policy.yml`](.absolute/policy.yml) | This repository's answers to the standard, which your game repo inherits and edits. |
 
 ## Starting a new game
@@ -46,15 +50,33 @@ PUBLIC_PORTS=7777/udp           STOP_SIGNAL=INT
 SAVE_PATHS=saved                SNAPSHOT_PATHS=/opt/satisfactory/server
 ```
 
+## What this template refuses to repeat
+
+Three defects from the earlier hand-written images are designed out here, and
+each one cost real time to find:
+
+- **The game is the supervised process.** `scripts/server` execs the binary
+  instead of backgrounding it and looping, so supervisor's `startsecs`,
+  `startretries`, `autorestart` and `stopsignal` govern the game. A wrapper
+  that outlives its child makes all of them decoration, and a server that can
+  never start crash-loops forever while the container reports healthy.
+- **The server's output reaches `docker logs`.** A log an operator cannot see
+  during an incident may as well not exist — and in CI it meant assertions
+  counting matches in a stream that could not contain the answer.
+- **Readiness is a capability, not a string.** The e2e waits for a bound port.
+  Guessing which startup line a build prints cost a day across two
+  repositories, in four separate ways.
+
 ## Status
 
-The shared library, the manifest and the fast tier are here and tested. The
-container layer — `Dockerfile`, the compose files, the end-to-end suite, the
-publish and build-watch workflows — lands with the first real game generated
-from this template, because the standard does not let a thing be called proven
-until a suite has passed on it. See the exceptions in
-[`.absolute/policy.yml`](.absolute/policy.yml), which say exactly that, with
-dates.
+The container layer landed with the first game
+([absolute-satisfactory-server](https://github.com/abspwgm/absolute-satisfactory-server)),
+which is what the standard requires: a thing is not proven until a suite has
+passed on it.
+
+Two things are still missing and are recorded as dated exceptions in
+[`.absolute/policy.yml`](.absolute/policy.yml): the generic snapshot/hold/restore
+CLI, and the scheduled build watch. Both belong here rather than in each game.
 
 ## Licence
 

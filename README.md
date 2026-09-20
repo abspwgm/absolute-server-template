@@ -2,8 +2,7 @@
 
 The template every Absolute game server image starts from. Press **Use this
 template**, fill in `manifest.env`, write the game's quirks, and you have a
-server image that already meets the
-[Absolute engineering standard](https://github.com/abspwgm/.github).
+server image that already meets the Absolute engineering standard.
 
 It exists because the alternative is fifty diverging copies of the same update
 logic — and the update logic is the part that most needs to be right.

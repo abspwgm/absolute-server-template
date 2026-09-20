@@ -77,9 +77,7 @@ security:
           verified_by: tests/unit/test_pinned_fetch.sh
     L3:
       requirements:
-        base_image_from_approved_library:
-          status: exception
-          exception: no-container-layer-yet
+        base_image_from_approved_library: Dockerfile
         least_privilege_tokens: .github/workflows/lint.yml
         no_secrets_in_build_args: .github/workflows/lint.yml
         ephemeral_runners: .github/workflows/lint.yml
@@ -99,17 +97,11 @@ security:
           reason: No artifact is produced.
     L5:
       requirements:
-        least_privilege_runtime:
-          status: exception
-          exception: no-container-layer-yet
-        admin_interfaces_private:
-          status: exception
-          exception: no-container-layer-yet
+        least_privilege_runtime: config/supervisord.conf
+        admin_interfaces_private: docker-compose.yml
         default_credentials_refused: tests/unit/test_credentials.sh
         fail_closed_on_state_destroying_paths: tests/unit/test_manifest.sh
-        honest_health_reporting:
-          status: exception
-          exception: no-container-layer-yet
+        honest_health_reporting: scripts/healthcheck
       controls:
         - id: manifest-fails-closed
           description: >-
@@ -134,36 +126,35 @@ security:
       requirements:
         snapshot_before_risk:
           status: exception
-          exception: no-container-layer-yet
+          exception: no-recovery-cli-yet
         hold_on_failed_verification:
           status: exception
-          exception: no-container-layer-yet
+          exception: no-recovery-cli-yet
         restore_rehearsed_in_ci:
           status: exception
-          exception: no-container-layer-yet
-        retention_exercised_by_test:
-          status: exception
-          exception: no-container-layer-yet
+          exception: no-recovery-cli-yet
+        retention_exercised_by_test: tests/e2e/test_backup.sh
     L7:
       requirements:
         scheduled_canary:
           status: exception
-          exception: no-container-layer-yet
+          exception: no-build-watch-yet
         one_issue_per_failure_class:
           status: exception
-          exception: no-container-layer-yet
+          exception: no-build-watch-yet
         security_policy_published: SECURITY.md
         findings_kept_private: SECURITY.md
 
 exceptions:
-  - id: no-container-layer-yet
+  - id: no-recovery-cli-yet
     reason: >-
-      This repository currently holds the shared library, the manifest and the
-      fast tier. The container layer - Dockerfile, compose files, the five
-      shared end-to-end tests, the disaster drill, publish and build-watch -
-      lands with the first real game generated from the template, because the
-      standard does not let a thing be called proven until a suite has passed on
-      it, and a template with no game cannot run that suite. Every requirement
-      citing this exception is answered by the generated repository today, and
-      will be answered here once the first game proves the layer.
+      The container layer is here, but the generic snapshot, hold and restore
+      CLI is not. It is the next thing to extract from the Valheim image, and
+      writing it per game is exactly what this template exists to prevent.
+    expires: "2027-03-31"
+  - id: no-build-watch-yet
+    reason: >-
+      Nothing boots a generated image against today's Steam build on a
+      schedule. build-watch is a shared reusable workflow in the hub's plan
+      rather than a per-game copy.
     expires: "2027-03-31"

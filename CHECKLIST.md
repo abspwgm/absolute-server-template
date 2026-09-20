@@ -2,6 +2,17 @@
 
 A game ships when every line here is done. Booting once is not shipping.
 
+## The image
+
+- [ ] `ARG GAME_ID` in the `Dockerfile` matches `GAME_ID` in `manifest.env`.
+- [ ] The packages the engine needs are installed (Wine titles need the wine
+      base; JVM titles need a JRE; most Steam titles need nothing beyond the
+      32-bit libraries already there).
+- [ ] `EXPOSE` and the compose port list match `PUBLIC_PORTS` and
+      `PRIVATE_PORTS`, with private ports bound to `127.0.0.1`.
+- [ ] `scripts/server` passes the arguments this game actually needs, and
+      `exec`s the binary — never backgrounds it.
+
 ## Manifest
 
 - [ ] `STEAM_APP_ID` is the **dedicated server's** app id, not the client's.

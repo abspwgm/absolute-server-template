@@ -38,6 +38,10 @@ concurrency:
 
 jobs:
   lint:
+    # This job's name is a required status check for every game server in the
+    # organization: a pull request cannot merge until it passes. Renaming it
+    # leaves a new server's main requiring a check that never reports, so every
+    # pull request waits forever - or, worse, requiring nothing. Keep it exact.
     name: Lint (shellcheck)
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -59,6 +63,10 @@ jobs:
         run: MANIFEST_FILE=manifest.env bash -c 'source scripts/manifest && manifest_load'
 
   e2e:
+    # This job's name is a required status check for every game server in the
+    # organization: a pull request cannot merge until it passes. Renaming it
+    # leaves a new server's main requiring a check that never reports, so every
+    # pull request waits forever - or, worse, requiring nothing. Keep it exact.
     name: End-to-End Tests
     # Fork pull requests go to a GitHub-hosted runner, free for public
     # repositories. Everything else takes the org pool, which holds the Steam
@@ -147,6 +155,10 @@ jobs:
         run: docker compose -f docker-compose.test.yml down -v 2>/dev/null || true
 
   build-only:
+    # This job's name is a required status check for every game server in the
+    # organization: a pull request cannot merge until it passes. Renaming it
+    # leaves a new server's main requiring a check that never reports, so every
+    # pull request waits forever - or, worse, requiring nothing. Keep it exact.
     name: Build Verification
     runs-on: ubuntu-latest
     timeout-minutes: 20

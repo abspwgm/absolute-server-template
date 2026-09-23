@@ -31,7 +31,7 @@ waited=0
 while [[ ${waited} -lt ${DEADLINE} ]]; do
     if ! docker ps --format '{{.Names}}' | grep -qx "${CONTAINER}"; then
         log_fail "Container stopped during startup"
-        docker logs "${CONTAINER}" --tail 40 2>&1 || true
+        dump_container_logs "${CONTAINER}" 40
         exit 1
     fi
     if port_bound "${PORT}"; then
@@ -44,7 +44,7 @@ done
 
 if [[ ${waited} -ge ${DEADLINE} ]]; then
     log_fail "The game port never bound within ${DEADLINE}s"
-    docker logs "${CONTAINER}" --tail 60 2>&1 || true
+    dump_container_logs "${CONTAINER}" 60
     exit 1
 fi
 
@@ -55,7 +55,7 @@ restarts="$(docker logs "${CONTAINER}" 2>&1 | grep -c "spawned: 'game'" || true)
 [[ "${restarts}" =~ ^[0-9]+$ ]] || restarts=0
 if [[ "${restarts}" -gt 1 ]]; then
     log_fail "The game was spawned ${restarts} times: it is restarting, not running"
-    docker logs "${CONTAINER}" --tail 60 2>&1 || true
+    dump_container_logs "${CONTAINER}" 60
     exit 1
 fi
 log_pass "The game was started once and stayed up"

@@ -66,6 +66,7 @@ each one cost real time to find:
 - **Readiness is a capability, not a string.** The e2e waits for a bound port.
   Guessing which startup line a build prints cost a day across two
   repositories, in four separate ways.
+- **The lab's address stays in the lab.** A game learns the runner's public address from Steam and prints it. On lab hardware the E2E workflow learns it first and masks it, scrubs it from what it uploads, and fails a suite that prints it; a test quotes what it asserts, and dumps a container's log through `dump_container_logs`.
 
 ## Status
 

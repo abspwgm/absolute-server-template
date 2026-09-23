@@ -11,8 +11,19 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../test_helpers.sh"
 
+CONTAINER="${CONTAINER:-example-server}"
 PORT="${SERVER_PORT:-7777}"
 DEADLINE="${SERVER_START_DEADLINE:-2400}"
+
+# The container's UDP socket table, parsed on this side. This used `ss` inside
+# the container, which no image in this family installs: the probe's stderr went
+# to /dev/null, grep saw nothing, and the port "never bound" however healthy the
+# server was (absolute-satisfactory-server#2). /proc/net is always there.
+# `exit 0` because udp6 is absent on a host with IPv6 off, and pipefail would
+# otherwise fail a port that was found in udp.
+port_bound() {
+    MSYS_NO_PATHCONV=1 docker exec "${CONTAINER}" sh -c         'cat /proc/net/udp; cat /proc/net/udp6 2>/dev/null; exit 0' 2>/dev/null         | awk -v suffix=":$(printf '%04X' "$1")" 'toupper($2) ~ (suffix "$") { found = 1 } END { exit !found }'
+}
 
 log_test_start "server_start"
 
@@ -23,7 +34,7 @@ while [[ ${waited} -lt ${DEADLINE} ]]; do
         docker logs "${CONTAINER}" --tail 40 2>&1 || true
         exit 1
     fi
-    if docker exec "${CONTAINER}" sh -c "ss -lun 2>/dev/null | grep -q ':${PORT}'" 2>/dev/null; then
+    if port_bound "${PORT}"; then
         log_pass "The game port ${PORT}/udp is bound after ${waited}s"
         break
     fi

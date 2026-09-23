@@ -112,6 +112,17 @@ get_server_pid() {
 # value is replaced by a generated one, stored 0600 and never logged.
 CREDENTIAL_DENYLIST=("changeme" "password" "your_secure_password" "admin" "adminpassword" "rcon" "secret")
 
+# True when something has bound <port>/udp. /proc/net/udp lists each socket's
+# local address as HEXIP:HEXPORT in column 2, and /proc is always there, which
+# is the point: `ss` is not. udp6 is absent on a host with IPv6 disabled, so it
+# is read only when it is readable.
+udp_port_bound() {
+    local tables=(/proc/net/udp)
+    [[ -r /proc/net/udp6 ]] && tables+=(/proc/net/udp6)
+    awk -v suffix=":$(printf '%04X' "$1")" \
+        'toupper($2) ~ (suffix "$") { found = 1 } END { exit !found }' "${tables[@]}"
+}
+
 is_default_credential() {
     local candidate="${1,,}"
     local denied

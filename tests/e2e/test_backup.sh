@@ -9,6 +9,12 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../test_helpers.sh"
 
+# Both of these are read from the environment so a game can override them,
+# and defaulted here because nothing else sets them: without the defaults every
+# docker command in this file ran against a container named "" and the test
+# could only fail.
+CONTAINER="${CONTAINER:-example-server}"
+GAME_ID="${GAME_ID:-example}"
 MAX=3   # BACKUPS_MAX_COUNT in docker-compose.test.yml
 
 log_test_start "backup"

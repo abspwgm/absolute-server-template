@@ -59,7 +59,13 @@ jobs:
       - name: Unit suites (no Docker)
         run: bash tests/run_unit.sh
 
+      # The template itself is the one repository allowed to carry the
+      # placeholder app id; every repository cut from it must not. GitHub marks
+      # the template with is_template, so the guard skips there and runs
+      # everywhere else. Compared to true, not negated: a payload without the
+      # field keeps the guard on rather than silently switching it off.
       - name: Manifest is valid
+        if: ${{ github.event.repository.is_template != true }}
         run: MANIFEST_FILE=manifest.env bash -c 'source scripts/manifest && manifest_load'
 
   e2e:
@@ -68,6 +74,12 @@ jobs:
     # leaves a new server's main requiring a check that never reports, so every
     # pull request waits forever - or, worse, requiring nothing. Keep it exact.
     name: End-to-End Tests
+    # There is no game to run this against in the template itself: the suite
+    # runs in every repository cut from it, and is skipped here rather than
+    # failing on every pull request by design. is_template is set only on the
+    # template, and the comparison keeps the suite on wherever the field is
+    # missing.
+    if: ${{ github.event.repository.is_template != true }}
     # Fork pull requests go to a GitHub-hosted runner, free for public
     # repositories. Everything else takes the org pool, which holds the Steam
     # depot cache.
@@ -200,7 +212,9 @@ jobs:
           docker run --rm absolute-${{ steps.manifest.outputs.game_id }}-server:build-test \
             grep -qx "user=${{ steps.manifest.outputs.game_id }}" /etc/supervisor/conf.d/game.conf
 
+      # Skipped on the template itself, for the reason the lint job gives.
       - name: the manifest is present and valid inside the image
+        if: ${{ github.event.repository.is_template != true }}
         run: |
           docker run --rm absolute-${{ steps.manifest.outputs.game_id }}-server:build-test \
             bash -c 'source /opt/${{ steps.manifest.outputs.game_id }}/scripts/manifest && MANIFEST_FILE=/opt/manifest.env manifest_load'

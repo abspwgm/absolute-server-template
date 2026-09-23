@@ -17,7 +17,7 @@ logic — and the update logic is the part that most needs to be right.
 | [`Dockerfile`](Dockerfile) | The image. A new game normally changes four things: the `GAME_ID` default, the packages its engine needs, `EXPOSE`, and the default port. |
 | [`config/supervisord.conf`](config/supervisord.conf) | Supervises **the game process itself**, not a wrapper, and sends its output to the container's stdout. |
 | [`tests/unit/`](tests/unit) | The fast tier. No Docker, no network, under a second, and it fails when any of the above stops being true. |
-| [`tests/e2e/`](tests/e2e) | The merge tier, against the real image. Readiness is a bound port, not a log line. |
+| [`tests/e2e/`](tests/e2e) | The merge tier, against the real image. Readiness is a bound port, not a log line. It runs in every repository cut from this one; here, with no game to run it against, the job skips itself, and the template merges on lint, build and conformance instead. |
 | [`.github/dependabot.yml`](.github/dependabot.yml) | Weekly, grouped updates for the pinned action SHAs and the base image digest. A pin nothing moves is a pin that rots; `tests/unit/test_dependabot.sh` fails when a new kind of dependency appears without cover. |
 | [`docs/INSTALL.md`](docs/INSTALL.md) | The install guide skeleton, written to the documentation standard. |
 | [`.absolute/policy.yml`](.absolute/policy.yml) | This repository's answers to the standard, which your game repo inherits and edits. |

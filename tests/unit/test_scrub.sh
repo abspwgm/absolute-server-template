@@ -45,9 +45,11 @@ check "with nothing to hide, the output is unchanged" [ "${untouched}" = "${LINE
 literal="$(RUNNER_PUBLIC_ADDRESS="${V4}" scrub_addresses <<< "203x0x113x9 is not the address")"
 check "the dots are literal, not wildcards" [ "${literal}" = "203x0x113x9 is not the address" ]
 
-# Every `docker logs` in the suite is either the helper or piped into a
-# computation. One straight into the output is a dump the scrub never sees.
-raw="$(grep -rn 'docker logs' "${PROJECT_DIR}/tests/e2e" | grep -v '|' || true)"
+# Every `docker logs` in the suite is read by a computation (a $(...) or a
+# grep) or scrubbed on its way out. Anything else is a dump the scrub never
+# sees, whatever it is piped through afterwards. A comment that mentions the
+# command is not a dump.
+raw="$(grep -rn 'docker logs' "${PROJECT_DIR}/tests/e2e" | grep -vE '^[^:]*:[0-9]+:[[:space:]]*#|[|] *grep|[$][(]docker logs|[|] *scrub_addresses' || true)"
 if [[ -z "${raw}" ]]; then
     log_pass "no test dumps a container's log without the scrub"
 else
